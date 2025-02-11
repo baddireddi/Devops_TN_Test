@@ -1,0 +1,22 @@
+trigger: none
+
+stages:
+- stage: Deploy
+  displayName: "Deploy to AKS"
+  jobs:
+  - job: Deploy
+    steps:
+    - script: |
+        echo "Setting Kubernetes context"
+        az aks get-credentials --resource-group rg-devsecops --name aks-devsecops-dev
+      displayName: "Get AKS Credentials"
+
+    - task: HelmDeploy@0
+      inputs:
+        command: "upgrade"
+        chartType: "FilePath"
+        chartPath: "helm/charts/frontend"
+        releaseName: "frontend-release"
+        namespace: "default"
+        kubeServiceConnection: "$(AKS_CONNECTION_NAME)"
+      displayName: "Deploy Frontend using Helm"

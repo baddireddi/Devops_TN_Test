@@ -1,0 +1,29 @@
+trigger:
+  - main  # Trigger pipeline on commits to main branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  ACR_NAME: "devsecopsacr123"  # Update with your actual ACR name
+  IMAGE_TAG: "$(Build.BuildId)"
+
+stages:
+- stage: Build
+  displayName: "Build and Push Docker Images"
+  jobs:
+  - job: Build
+    steps:
+    - script: |
+        echo "Logging into Azure Container Registry..."
+        az acr login --name $(ACR_NAME)
+      displayName: "ACR Login"
+
+    - task: Docker@2
+      inputs:
+        command: "buildAndPush"
+        repository: "frontend"
+        dockerfile: "microservices/frontend/Dockerfile"
+        containerRegistry: "$(ACR_CONNECTION_NAME)"
+        tags: "$(IMAGE_TAG)"
+      displayName: "Build & Push Frontend Image"
